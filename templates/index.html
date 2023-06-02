@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Xử lý ảnh</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f1f1f1;
+      }
+
+      .container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      h2 {
+        color: #333;
+      }
+
+      .image-preview {
+        margin: 20px 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 300px;
+        border: 1px solid #ddd;
+        background-color: #f9f9f9;
+      }
+
+      .image-preview img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      .result-page {
+        display: none;
+      }
+
+      .result-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #fff;
+        box-shadow: 0px 0px 5px rgba(0, 0, 0, 0.1);
+        text-align: center;
+      }
+
+      input[type="file"] {
+        display: none;
+      }
+
+      .custom-button {
+        margin-top: 1rem;
+        display: inline-block;
+        background-color: #4caf50;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        border: none;
+        transition: background-color 0.3s ease;
+      }
+
+      .custom-button-2 {
+        margin-top: 1rem;
+        display: inline-block;
+        border: 1ps solid #cfcfcf;
+        color: #000000;
+        padding: 10px 20px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .custom-button:hover {
+        background-color: #45a049;
+      }
+
+      .form-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-top: 20px;
+      }
+
+      .form-container label {
+        color: #333;
+        font-weight: bold;
+        margin-bottom: 10px;
+      }
+
+      .form-container input[type="text"] {
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 3px;
+        width: 200px;
+        margin-bottom: 10px;
+      }
+
+      .form-container input[type="submit"] {
+        background-color: #4caf50;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        border: none;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .form-container input[type="submit"]:hover {
+        background-color: #45a049;
+      }
+
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        grid-gap: 20px;
+        margin-top: 20px;
+      }
+
+      .image-grid img {
+        max-width: 100%;
+        max-height: 100%;
+      }
+      #preview-image, #process-button {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Xử lý ảnh</h2>
+      <input type="file" id="image-input" accept="image/*" />
+      <label for="image-input" class="custom-button">Chọn ảnh</label>
+      <div class="image-preview">
+        <img id="preview-image" src="" alt="Preview" />
+      </div>
+      <select id="image-quantity">
+        <option value="1">Chọn số ảnh giống gần nhất</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+      </select>
+      <br />
+      <button id="process-button" class="custom-button">Xử lý ảnh</button>
+    </div>
+
+    <div class="result-page">
+      <div class="result-container">
+        <h2>Kết quả sử lý ảnh</h2>
+        <h4>Tên nhân vật: <span id="character__name"></span></h4>
+        <p>Giới thiệu: <span id="character__desc"></span></p>
+        <p><span id="images_count"></span> bức ảnh gần nhất:</p>
+        <div class="image-grid">
+          <!-- 5 ô ảnh sẽ được hiển thị ở đây -->
+        </div>
+
+        <div id="result-name"></div>
+        <button id="back" class="custom-button-2">Quay lại</button>
+      </div>
+    </div>
+
+    <script>
+      document.querySelector('#back').addEventListener('click', () => {
+        document.querySelector(".container").style.display = "block";
+        document.querySelector(".result-page").style.display = "none";
+      })
+      document
+        .getElementById("image-input")
+        .addEventListener("change", function (e) {
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            document.getElementById("preview-image").src = e.target.result;
+          };
+          reader.readAsDataURL(e.target.files[0]);
+          document.getElementById('preview-image').style.display = 'block';
+          document.getElementById('process-button').style.display = 'inline-block';
+        });
+
+      document
+        .getElementById("process-button")
+        .addEventListener("click", function () {
+          var fileInput = document.getElementById("image-input");
+          var file = fileInput.files[0];
+          if (file) {
+            var formData = new FormData();
+            formData.append("image", file);
+            formData.append("quantity", document.getElementById("image-quantity")?.value || 1)
+            fetch("/process", {
+              method: "POST",
+              body: formData,
+            })
+              .then(function (response) {
+                if (response.ok) {
+                  return response.json();
+                } else {
+                  throw new Error("Image upload failed.");
+                }
+              })
+              .then(function (data) {
+                const { character, images } = data;
+                document.querySelector(".container").style.display = "none";
+                document.querySelector(".result-page").style.display = "block";
+                document.querySelector("#character__name").textContent = character.Name;
+                document.querySelector("#character__desc").textContent = character.Desc;
+                document.querySelector("#images_count").textContent = images.length;
+
+                // Hiển thị 5 ô ảnh gần nhất
+                var imageGrid = document.querySelector(".image-grid");
+                for (var i = 0; i < images.length; i++) {
+                  var image = document.createElement("img");
+                  image.src = images[i].src
+                  imageGrid.appendChild(image);
+                }
+              })
+              .catch(function (error) {
+                console.log(error)
+                alert('Đã xảy ra lỗi')
+              });
+          }
+          d
+        });
+
+      document
+        .querySelector(".form-container")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          var name = document.getElementById("name").value;
+          document.getElementById("result-name").textContent =
+            "Tên đã điền: " + name;
+        });
+    </script>
+  </body>
+</html>

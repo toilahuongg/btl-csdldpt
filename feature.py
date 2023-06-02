@@ -19,7 +19,7 @@ def createImageFeatures():
             image = cv2.imread(image_path)
 
             # Trích xuất đặc trưng HOG của ảnh
-            hog_features = compute_hog(image)
+            hog_features = compute_hog(image, cells_per_block=16)
 
             # Chuyển đổi đặc trưng HOG thành một chuỗi
             hog_features_str = hog_to_str(hog_features)

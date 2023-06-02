@@ -48,7 +48,7 @@ def compute_histogram(magnitude, angle, cells_per_block):
 
     return histogram
 
-def compute_hog(image, cells_per_block = 8):
+def compute_hog(image, cells_per_block = 16):
     # Chuyển đổi ảnh sang dạng grayscale
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 

@@ -2,8 +2,10 @@ from flask import Flask, render_template, request, jsonify
 from hog import compute_hog
 from setup import setup
 from feature import createImageFeatures
-import joblib, os, cv2, json
+import joblib, os, cv2, json, numpy as np
 from db import getImagesByHOG, getCharacterByID
+from skimage.transform import resize
+import imageio
 
 setup()
 createImageFeatures()
@@ -18,10 +20,20 @@ def process():
     image = request.files['image']
 
     clf = joblib.load('svm_model.pkl')
+    filename = image.filename
+    image.save(filename)
+    image = imageio.imread(filename)
+    os.remove(filename)
 
-    image.save(image.filename)
-    file = cv2.imread(image.filename)
-    os.remove(image.filename)
+    new_size = (128, 128)
+    resized_image = resize(image, new_size)
+    resized_image = (resized_image * 255).astype(np.uint8)
+    new_filename = os.path.splitext(filename)[0] + '.png'
+
+    imageio.imsave(new_filename, resized_image)
+    file = cv2.imread(new_filename)
+    os.remove(new_filename)
+
 
     hog_features = compute_hog(file)
     clf = joblib.load('svm_model.pkl')
